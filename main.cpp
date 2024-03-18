@@ -10,6 +10,7 @@ int main() {
   auto outputFile = std::ofstream("./log.txt");
 
   std::string instrucoes[32];
+
   // inicializar pc (próxima instrução) como 0,
   // ir será atualizado dentro do loop do programa
   int pc = 0;
@@ -33,30 +34,34 @@ int main() {
   // valores serão inseridos inversamente,
   // para permitir que o usuário dê input 1
   // como uma string de 32 bits
-  {
-    std::string p1, p2;
+  std::string p1, p2;
 
-    std::cout << "Valor de A:" << std::endl;
-    std::cin >> p1;
+  std::cout << "Valor de A:" << std::endl;
+  std::cin >> p1;
 
-    for (int i = 0; i < p1.length(); i++) {
-      in1[31 - i] = p1[p1.length() - i - 1];
-    }
-
-    std::cout << "Valor de B:" << std::endl;
-    std::cin >> p2;
-
-    for (int i = 0; i < p2.length(); i++) {
-      in2[31 - i] = p2[p2.length() - i - 1];
-    }
+  for (int i = 0; i < p1.length(); i++) {
+    in1[31 - i] = p1[p1.length() - i - 1];
   }
 
+  std::cout << "Valor de B:" << std::endl;
+  std::cin >> p2;
+
+  for (int i = 0; i < p2.length(); i++) {
+    in2[31 - i] = p2[p2.length() - i - 1];
+  }
+
+  std::string result;
+
   // executar o loop até que não hajam mais instruções a serem executadas.
-  while (instrucoes[pc].compare("")) {
+  while (pc != -1) {
     // IR = PC
     ir = pc;
     // PC => PC + 1, para a próxima instrução
-    pc++;
+    if (instrucoes[ir + 1].compare("") != 1) {
+      pc = -1;
+    } else {
+      pc++;
+    }
 
     // carregar a instrução atual
     std::string inst = instrucoes[ir];
@@ -72,11 +77,11 @@ int main() {
     // carregaremos os inputs em variáveis diferentes,
     // pois podemos alterá-la para a presente instrução
     // e não queremos alterá-la para instruções futuras.
-    auto in11 = in1;
-    auto in21 = in2;
+    auto in1l = in1;
+    auto in2l = in2;
 
     // resultado provisório, 32 bits
-    std::string result = "00000000000000000000000000000000";
+    result = "00000000000000000000000000000000";
 
     // se INC for 1, forçar o valor de vem-um como 1
     if (inc == '1') {
@@ -85,21 +90,22 @@ int main() {
 
     // ignorar input de A se ENA for 0
     if (ena == '0') {
-      in11 = "00000000000000000000000000000000";
+      in1l = "00000000000000000000000000000000";
     }
 
     // ignorar input de B se ENB for 0
     if (enb == '0') {
-      in21 = "00000000000000000000000000000000";
+      in2l = "00000000000000000000000000000000";
     }
 
     // valor de INVA e A são utilizados como input
     // de um XOR, logo, se ambos forem 1, deixarei
     // o primeiro input como sendo 0
-    if (inva == '1') {
-      for (int i = 0; i < in11.length(); i++) {
-        in11[i] = '0' + !('0' - in11[i]);
-      }
+    /* for (int i = 0; i < in1l.length(); i++) {
+      in1l[i] = '0' + (in1l[i] ^ inva);
+    } */
+    for (int i = 0; i < p1.length(); i++) {
+      in1l[31 - i] = '0' + (in1l[31 - i] ^ inva);
     }
 
     // simulação de um decodificador
@@ -115,8 +121,8 @@ int main() {
         for (int i = 0; i < 32; i++) {
           // resultado será o resultado da operação AND
           // em todos os bits dos operandos
-          a = in11[31 - i];
-          b = in21[31 - i];
+          a = in1l[31 - i];
+          b = in2l[31 - i];
           result[31 - i] = (a & b);
         }
         // F0:0 F1:1
@@ -125,8 +131,8 @@ int main() {
         for (int i = 0; i < 32; i++) {
           // resultado será o resultado da operação OR
           // em todos os bits dos operandos
-          a = in11[31 - i];
-          b = in21[31 - i];
+          a = in1l[31 - i];
+          b = in2l[31 - i];
           result[31 - i] = (a | b);
         }
       }
@@ -134,18 +140,18 @@ int main() {
       // F0:1 F1:0
       if (f1 == '0') {
         // !B
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < p2.length(); i++) {
           // bem simples, resultado será o inverso
           // de B
-          result[31 - i] = '0' + !('0' - in21[31 - i]);
+          result[31 - i] = '0' + !('0' - in2l[31 - i]);
         }
       } else {
         // F0:1 F1:1
         for (int i = 0; i < 32; i++) {
           // pegaremos o bit menos significante
           // de cada um dos operandos
-          a = in11[31 - i];
-          b = in21[31 - i];
+          a = in1l[31 - i];
+          b = in2l[31 - i];
 
           // transformaremos os caracteres em números e somá-los
           int s = ((a - '0') + (b - '0') + (cin - '0'));
@@ -173,8 +179,9 @@ int main() {
     }
 
     // escrever no log.
-    outputFile << "PC:" << ir << " IR:" << pc << " A:" << in11 << " B:" << in21
-               << " S:" << result << " VAI-UM:" << cin << std::endl;
+    outputFile << "PC:" << pc << (pc == -1 ? "" : " ") << " IR:" << ir
+               << " A:" << in1l << " B:" << in2l << " S:" << result
+               << " VAI-UM:" << cin << std::endl;
 
     // resetar o valor do vem-um
     cin = '0';
