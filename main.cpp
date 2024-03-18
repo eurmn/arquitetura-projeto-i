@@ -8,13 +8,15 @@ int main() {
   auto inputFile = std::ifstream("./instrucoes.txt");
   // abrir arquivo de log para uso futuro
   auto outputFile = std::ofstream("./log.txt");
+
   std::string instrucoes[32];
   // inicializar pc (próxima instrução) como 0,
   // ir será atualizado dentro do loop do programa
   int pc = 0;
   int ir;
 
-  std::string in1, in2;
+  std::string in1 = "00000000000000000000000000000000";
+  std::string in2 = "00000000000000000000000000000000";
   char inva, ena, enb, f0, f1, inc, cin, a, b;
   // cin pode não ser definido se a instrução
   // for decodificada como diferente de soma,
@@ -28,11 +30,26 @@ int main() {
 
   inputFile.close();
 
-  std::cout << "Valor de A:" << std::endl;
-  std::cin >> in1;
+  // valores serão inseridos inversamente,
+  // para permitir que o usuário dê input 1
+  // como uma string de 32 bits
+  {
+    std::string p1, p2;
 
-  std::cout << "Valor de B:" << std::endl;
-  std::cin >> in2;
+    std::cout << "Valor de A:" << std::endl;
+    std::cin >> p1;
+
+    for (int i = 0; i < p1.length(); i++) {
+      in1[31 - i] = p1[p1.length() - i - 1];
+    }
+
+    std::cout << "Valor de B:" << std::endl;
+    std::cin >> p2;
+
+    for (int i = 0; i < p2.length(); i++) {
+      in2[31 - i] = p2[p2.length() - i - 1];
+    }
+  }
 
   // executar o loop até que não hajam mais instruções a serem executadas.
   while (instrucoes[pc].compare("")) {
@@ -80,8 +97,7 @@ int main() {
     // de um XOR, logo, se ambos forem 1, deixarei
     // o primeiro input como sendo 0
     if (inva == '1') {
-      for (int i = 0; i < in11.length(); i++)
-      {
+      for (int i = 0; i < in11.length(); i++) {
         in11[i] = '0' + !('0' - in11[i]);
       }
     }
@@ -93,6 +109,7 @@ int main() {
     // 1   -  0   -  !B
     // 1   -  1   -  SOMA
     if (f0 == '0') {
+      // F0:0 F1:0
       if (f1 == '0') {
         // AND
         for (int i = 0; i < 32; i++) {
@@ -102,6 +119,7 @@ int main() {
           b = in21[31 - i];
           result[31 - i] = (a & b);
         }
+        // F0:0 F1:1
       } else {
         // OR
         for (int i = 0; i < 32; i++) {
@@ -113,6 +131,7 @@ int main() {
         }
       }
     } else {
+      // F0:1 F1:0
       if (f1 == '0') {
         // !B
         for (int i = 0; i < 32; i++) {
@@ -121,6 +140,7 @@ int main() {
           result[31 - i] = '0' + !('0' - in21[31 - i]);
         }
       } else {
+        // F0:1 F1:1
         for (int i = 0; i < 32; i++) {
           // pegaremos o bit menos significante
           // de cada um dos operandos
@@ -137,8 +157,7 @@ int main() {
             // nesse caso, 1 + 1 + 1 = 11
             cin = '1';
             s = 1;
-          } else if (s == 2)
-          {
+          } else if (s == 2) {
             // 1 + 1 = 10
             cin = '1';
             s = 0;
@@ -156,7 +175,7 @@ int main() {
     // escrever no log.
     outputFile << "PC:" << ir << " IR:" << pc << " A:" << in11 << " B:" << in21
                << " S:" << result << " VAI-UM:" << cin << std::endl;
-    
+
     // resetar o valor do vem-um
     cin = '0';
   }
