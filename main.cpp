@@ -79,8 +79,11 @@ int main() {
     // valor de INVA e A são utilizados como input
     // de um XOR, logo, se ambos forem 1, deixarei
     // o primeiro input como sendo 0
-    if (inva == '1' && a == '1') {
-      in11 = "00000000000000000000000000000000";
+    if (inva == '1') {
+      for (int i = 0; i < in11.length(); i++)
+      {
+        in11[i] = '0' + !('0' - in11[i]);
+      }
     }
 
     // simulação de um decodificador
@@ -115,8 +118,7 @@ int main() {
         for (int i = 0; i < 32; i++) {
           // bem simples, resultado será o inverso
           // de B
-          b = in21[31 - i];
-          result[31 - i] = b;
+          result[31 - i] = '0' + !('0' - in21[31 - i]);
         }
       } else {
         for (int i = 0; i < 32; i++) {
