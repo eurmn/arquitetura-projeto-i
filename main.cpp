@@ -50,8 +50,6 @@ int main() {
     in2[31 - i] = p2[p2.length() - i - 1];
   }
 
-  std::string result;
-
   // executar o loop até que não hajam mais instruções a serem executadas.
   while (pc != -1) {
     // IR = PC
@@ -81,7 +79,7 @@ int main() {
     auto in2l = in2;
 
     // resultado provisório, 32 bits
-    result = "00000000000000000000000000000000";
+    std::string result = "00000000000000000000000000000000";
 
     // se INC for 1, forçar o valor de vem-um como 1
     if (inc == '1') {
@@ -101,11 +99,8 @@ int main() {
     // valor de INVA e A são utilizados como input
     // de um XOR, logo, se ambos forem 1, deixarei
     // o primeiro input como sendo 0
-    /* for (int i = 0; i < in1l.length(); i++) {
+    for (int i = 0; i < in1l.length(); i++) {
       in1l[i] = '0' + (in1l[i] ^ inva);
-    } */
-    for (int i = 0; i < p1.length(); i++) {
-      in1l[31 - i] = '0' + (in1l[31 - i] ^ inva);
     }
 
     // simulação de um decodificador
@@ -140,7 +135,7 @@ int main() {
       // F0:1 F1:0
       if (f1 == '0') {
         // !B
-        for (int i = 0; i < p2.length(); i++) {
+        for (int i = 0; i < 32; i++) {
           // bem simples, resultado será o inverso
           // de B
           result[31 - i] = '0' + !('0' - in2l[31 - i]);
